@@ -5,6 +5,16 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub Release and attach the EXE (true/false)'
+        required: false
+        default: 'false'
+      release_tag:
+        description: 'Tag name to use for the GitHub Release (e.g. v1.0.0). If empty, commit SHA is used.'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -40,3 +50,24 @@ jobs:
         with:
           name: time-check-config-sample
           path: time_config.json
+
+      - name: Create GitHub Release (optional)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || github.sha }}
+          release_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || github.sha }}
+          body: 'Automated build from GitHub Actions: Windows single-file EXE'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload EXE to Release (optional)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist\time-check-config.exe
+          asset_name: time-check-config.exe
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
