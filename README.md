@@ -1,3 +1,14 @@
+CI: GitHub Actions build
+------------------------
+This repository includes a GitHub Actions workflow that builds a Windows single-file EXE using PyInstaller when commits are pushed to `main` or a PR targets `main`.
+Where to find the build
+- After a successful run, the built EXE and a sample `time_config.json` are available as workflow artifacts under the GitHub Actions run page:
+  - Artifact: `time-check-config-exe` (contains `time-check-config.exe`)
+  - Artifact: `time-check-config-sample` (contains `time_config.json`)
+
+Notes
+- The workflow runs on `windows-2019` to match Windows Server 2019 compatibility.
+- The program still expects `time_config.json` to be external — place the config next to the EXE on the target machine or pass `--config <path>`.
 # time-check-config
 
 This version of the time-check tool reads `legal_times` and `tolerance` from an external JSON configuration file and evaluates a user-supplied time against those legal values.
