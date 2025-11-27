@@ -20,6 +20,8 @@ jobs:
   build:
     name: Build single-file Windows EXE
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -74,8 +76,10 @@ jobs:
           tag_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || github.sha }}
           release_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || github.sha }}
           body: 'Automated build from GitHub Actions: Windows single-file EXE'
+        # Use a repo secret `RELEASE_PUBLISH_TOKEN` (Personal Access Token with `repo` scope)
+        # when available; otherwise fall back to the workflow's token.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PUBLISH_TOKEN || github.token }}
 
       - name: Upload package to Release (optional)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
@@ -86,4 +90,4 @@ jobs:
           asset_name: time-check-config-package.zip
           asset_content_type: application/zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PUBLISH_TOKEN || github.token }}
