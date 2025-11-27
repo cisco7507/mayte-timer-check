@@ -39,11 +39,26 @@ jobs:
         run: |
           pyinstaller --onefile --name time-check-config time-check-config.py
 
+      - name: Package EXE and sample config
+        run: |
+          if (-not (Test-Path dist\time-check-config.exe)) { throw 'Built EXE not found' }
+          # create destination dir if missing
+          if (-not (Test-Path dist)) { New-Item -ItemType Directory -Path dist | Out-Null }
+          $zipPath = Join-Path dist 'time-check-config-package.zip'
+          if (Test-Path $zipPath) { Remove-Item $zipPath }
+          Compress-Archive -Path dist\time-check-config.exe, time_config.json -DestinationPath $zipPath
+
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
           name: time-check-config-exe
           path: dist\time-check-config.exe
+
+      - name: Upload package artifact (EXE + config ZIP)
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-check-config-package
+          path: dist\time-check-config-package.zip
 
       - name: Upload sample config
         uses: actions/upload-artifact@v4
@@ -53,6 +68,7 @@ jobs:
 
       - name: Create GitHub Release (optional)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
+        id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || github.sha }}
@@ -61,13 +77,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload EXE to Release (optional)
+      - name: Upload package to Release (optional)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true' }}
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist\time-check-config.exe
-          asset_name: time-check-config.exe
-          asset_content_type: application/octet-stream
+          asset_path: dist\time-check-config-package.zip
+          asset_name: time-check-config-package.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
