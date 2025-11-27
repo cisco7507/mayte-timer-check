@@ -75,6 +75,49 @@ Ran 5 tests in 0.02s
 OK
 ```
 
+Building a Windows executable (single-file) and keeping the config external
+---------------------------------------------------------------------
+
+You can create a standalone Windows executable using `PyInstaller`. The built EXE will *not* contain the
+configuration file — the program looks for `time_config.json` in this order:
+
+- If `--config <path>` is provided, that path is used.
+- Current working directory: `.\time_config.json`.
+- Directory next to the executable/script: `time_config.json` next to `time-check-config.exe`.
+
+This means you can ship `time-check-config.exe` and place `time_config.json` alongside it (or specify a path with `--config`).
+
+Example build steps (Windows PowerShell):
+
+```powershell
+cd C:\mayte-timer-check
+# create a virtual environment (optional but recommended)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+# install PyInstaller
+pip install pyinstaller
+# build a single-file exe (replace `time-check-config.py` with the script name)
+pyinstaller --onefile --name time-check-config time-check-config.py
+
+# After building, the EXE will be at: dist\time-check-config.exe
+```
+
+Run the EXE (config next to exe):
+
+```powershell
+cd dist
+.\time-check-config.exe 00:00:05.500
+
+# or explicitly point to a config file elsewhere:
+.\time-check-config.exe 00:00:05.500 --config C:\path\to\time_config.json
+```
+
+Notes and compatibility
+- PyInstaller must be run on Windows to build a Windows EXE for best results (building on Linux/macOS produces platform-specific binaries).
+- Windows Server 2019 compatibility: build on a 64-bit Windows machine with a compatible Python version (3.8-3.12 are commonly supported by recent PyInstaller releases). If you must run the build on a different OS, use a Windows CI runner or container.
+- The EXE reads the external `time_config.json`; do not bundle it inside the EXE if you need to edit config without rebuilding.
+
+
 Design notes
 - `load_config(path)` validates the config and returns a `(legal_times, tolerance)` tuple.
 - `parse_time(time_str)` is strict: it requires `hh:mm:ss.ms` and integer components.

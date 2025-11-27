@@ -140,7 +140,7 @@ def main():
         description='Evaluate a time value (hh:mm:ss.ms) against legal times from a config file.'
     )
     parser.add_argument('time', nargs='?', help='Time in hh:mm:ss.ms format')
-    parser.add_argument('--config', default='time_config.json', help='Path to JSON config file')
+    parser.add_argument('--config', default=None, help='Path to JSON config file (if omitted, searches CWD then executable directory)')
     parser.add_argument('--test', action='store_true', help='Run unit tests')
     parser.add_argument('--verbose', action='store_true', help='Run tests in verbose mode')
     args = parser.parse_args()
@@ -157,10 +157,27 @@ def main():
         parser.error('the following arguments are required: time')
 
     # Load config
+    # Resolve config path: prefer explicit `--config`, then CWD, then exe/script dir
+    def resolve_config_path(provided_path=None):
+        if provided_path:
+            return provided_path
+        # check current working directory first
+        cwd_path = os.path.join(os.getcwd(), 'time_config.json')
+        if os.path.exists(cwd_path):
+            return cwd_path
+        # next check directory of the running exe/script
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        exe_path = os.path.join(base_dir, 'time_config.json')
+        return exe_path
+
+    config_path = resolve_config_path(args.config)
     try:
-        legal_times, tolerance = load_config(args.config)
+        legal_times, tolerance = load_config(config_path)
     except Exception as e:
-        print(f'Error loading config: {e}')
+        print(f'Error loading config ({config_path}): {e}')
         sys.exit(2)
 
     try:
