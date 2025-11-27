@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build single-file Windows EXE
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository

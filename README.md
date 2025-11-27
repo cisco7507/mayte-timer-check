@@ -7,7 +7,7 @@ Where to find the build
   - Artifact: `time-check-config-sample` (contains `time_config.json`)
 
 Notes
-- The workflow runs on `windows-2019` to match Windows Server 2019 compatibility.
+- The workflow runs on `windows-latest` (typically Windows Server 2022 or newer) to match current GitHub-hosted runner images.
 - The program still expects `time_config.json` to be external — place the config next to the EXE on the target machine or pass `--config <path>`.
 # time-check-config
 
